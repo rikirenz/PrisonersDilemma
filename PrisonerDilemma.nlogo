@@ -1,41 +1,88 @@
 breed [agents agent]
+turtles-own [seenProb boldness vengefulness fitness mu]
 
 
-to setupSimpleRandom
-  clear-all
-  create-agents numAgents
-  ;; Make a circle of turtles
-  layout-circle turtles (max-pxcor - 1)
-  ;; Now make links one at a time until we have enough
-  while [count links < numLinks] [
-    ;; Note that if the link already exists, nothing happens
-    ask one-of turtles [ create-link-with one-of other turtles ]
-  ]
-end
 
 to setupErdosRenyi
+  ;; set the turtles
   clear-all
   create-turtles numAgents
-  ;; Make a circle of turtles
   layout-circle turtles (max-pxcor - 1)
-  ;; Now give each pair of turtles an equal chance
-  ;; of creating a link
-  ask turtles [
-    ;; we use "self > myself" here so that each pair of turtles
-    ;; is only considered once
-    create-links-with turtles with [self > myself and
-                                    random-float 1.0 < probErdosRenyi]
+
+
+  ;; define the turtles attributes
+  ask turtles[
+    set boldness 0 + random-float 1
+    set vengefulness 0 + random-float 1
+    set mu one-of [ true false ]
+    set fitness 0
   ]
+
+  ;; create links among turtles in according to the erods renyi model
+  ask turtles [
+    create-links-with turtles with [self != myself and                        ;; create link with someone different from itself
+                                    random-float 1.0 < probErdosRenyi]        ;; with a probability
+  ]
+
+  ;; create links for turtles without connection
+  ask turtles [
+    if count my-links = 0 [
+      create-link-with one-of turtles
+    ]
+  ]
+
+  ;; define the probability to be seen
+  ask turtles [
+      set seenProb 1 - (1 / count my-links )
+  ]
+
+end
+
+to go
+  ask turtles[
+    ;; condition about the posibility to be seen
+    if seenProb < boldness [
+      ;; conditional if about the probability to commit the crime
+      if random-float 1.0 < boldness [
+        ;; I'll commit the crime
+        ;; pick a random neighbor
+
+        ;; increase my payoff
+
+        ;; decrease his/her payoff
+
+        ;; conditional if about the probability to be seen
+        if random-float 1.0 < seenProb [
+          ;; !!!!!!!!!!!!!!!!!!!!!!!!!
+          ;; all the neighbors - the victim neighbor
+          while for all neighbors [
+          ;; !!!!!!!!!!!!!!!!!!!!!!!!!
+
+            ;; conditional if about the probability to be seen
+            if random-float 1.0 < vengefulness [
+              ;;I am going to punish him
+              ;; and stop the external while loop
+
+            ]
+          ]
+        ]
+
+
+
+      ]
+    ]
+  ]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-649
-470
+767
+1
+1267
+522
 16
 16
-13.0
+14.85
 1
 10
 1
@@ -72,21 +119,6 @@ HORIZONTAL
 
 SLIDER
 9
-93
-181
-126
-numLinks
-numLinks
-0
-100
-60
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-9
 184
 187
 217
@@ -101,12 +133,12 @@ NIL
 HORIZONTAL
 
 BUTTON
-8
-54
-179
-87
-Setup Random
-setupSimpleRandom
+9
+145
+180
+178
+Setup Erdos Renyi
+setupErdosRenyi
 NIL
 1
 T
@@ -118,13 +150,13 @@ NIL
 1
 
 BUTTON
-9
+11
+303
 145
-180
-178
-Setup Erdos Renyi
-setupErdosRenyi
-NIL
+336
+run simulation
+go
+T
 1
 T
 OBSERVER
