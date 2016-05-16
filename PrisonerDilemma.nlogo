@@ -1,5 +1,5 @@
 breed [agents agent]
-turtles-own [seenProb boldness vengefulness fitness mu]
+turtles-own [seenProb boldness vengefulness oldFitness newFitness mu]
 
 
 
@@ -9,13 +9,13 @@ to setupErdosRenyi
   create-turtles numAgents
   layout-circle turtles (max-pxcor - 1)
 
-
   ;; define the turtles attributes
   ask turtles[
     set boldness 0 + random-float 1
     set vengefulness 0 + random-float 1
     set mu one-of [ true false ]
-    set fitness 0
+    set oldFitness 0
+    set newFitness 0
   ]
 
   ;; create links among turtles in according to the erods renyi model
@@ -27,50 +27,62 @@ to setupErdosRenyi
   ;; create links for turtles without connection
   ask turtles [
     if count my-links = 0 [
-      create-link-with one-of turtles
+      create-link-with one-of turtles with [self != myself]
     ]
   ]
 
   ;; define the probability to be seen
   ask turtles [
-      set seenProb 1 - (1 / count my-links )
+      set seenProb 1 - (1 / ((count my-links) + 1) )
   ]
 
 end
 
 to go
   ask turtles[
-    ;; condition about the posibility to be seen
+    ;; condition about the possibility to be seen
     if seenProb < boldness [
-      ;; conditional if about the probability to commit the crime
-      if random-float 1.0 < boldness [
-        ;; I'll commit the crime
-        ;; pick a random neighbor
+      ;; I'll commit the crime
 
-        ;; increase my payoff
+      ;; pick a random neighbor
+      ;; decrease his/her payoff
+      ask link-neighbors[
+        set newFitness newFitness - 1
+      ]
 
-        ;; decrease his/her payoff
+      ;; increase my payoff
+      set newFitness newFitness + 3
 
-        ;; conditional if about the probability to be seen
-        if random-float 1.0 < seenProb [
-          ;; !!!!!!!!!!!!!!!!!!!!!!!!!
-          ;; all the neighbors - the victim neighbor
-          while for all neighbors [
-          ;; !!!!!!!!!!!!!!!!!!!!!!!!!
+      let criminalTurtle who
 
-            ;; conditional if about the probability to be seen
-            if random-float 1.0 < vengefulness [
-              ;;I am going to punish him
-              ;; and stop the external while loop
-
+      ;; conditional if about the probability to be seen
+      if random-float 1.0 < seenProb [
+        ask link-neighbors[
+          ;; conditional if about the probability to be punished
+          if random-float 1.0 < vengefulness [
+            ;;I am going to punish the criminal turtle
+            ;;My cost to punish him/her
+            set newFitness newFitness - 2
+            ;;His/her punishment
+            ask turtle criminalTurtle [
+              set newFitness newFitness - 9
+              ;; you need to change also the parametesrs of boldness in accordin to parameter mu
             ]
           ]
         ]
-
-
-
       ]
     ]
+  ]
+
+
+  ask turtles[
+    ifelse newFitness > oldFitness [
+      ;; you need to change also the parametesrs of boldness in according to parameter mu
+      print "I ll be more criminal"
+    ][
+      print "I ll be less criminal"
+    ]
+    set oldFitness newFitness
   ]
 
 end
@@ -111,7 +123,7 @@ numAgents
 numAgents
 0
 100
-54
+100
 1
 1
 NIL
@@ -126,7 +138,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.04
+0.01
 0.01
 1
 NIL
