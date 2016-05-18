@@ -1,6 +1,6 @@
 breed [agents agent]
-turtles-own [seenProb boldness vengefulness oldFitness newFitness mu]
-
+turtles-own [seenProb boldness vengefulness oldFitness newFitness mu history]
+globals [time]
 
 
 to setupErdosRenyi
@@ -8,6 +8,9 @@ to setupErdosRenyi
   clear-all
   create-turtles numAgents
   layout-circle turtles (max-pxcor - 1)
+
+  ;; set the global variables
+  set time 0
 
   ;; define the turtles attributes
   ask turtles[
@@ -18,27 +21,26 @@ to setupErdosRenyi
     set newFitness 0
   ]
 
+  ;;#############################################
+  ;;############ DEFINE THE SEENPROB ############
+  ;;#############################################
   ;; create links among turtles in according to the erods renyi model
   ask turtles [
     create-links-with turtles with [self != myself and                        ;; create link with someone different from itself
                                     random-float 1.0 < probErdosRenyi]        ;; with a probability
   ]
-
-  ;; create links for turtles without connection
-  ask turtles [
-    if count my-links = 0 [
-      create-link-with one-of turtles with [self != myself]
-    ]
-  ]
-
   ;; define the probability to be seen
   ask turtles [
-      set seenProb 1 - (1 / ((count my-links) + 1) )
+      set seenProb 1 - (1 / ((count my-links) + 1))
   ]
 
 end
 
 to go
+  ;; set the global variables
+  set time 0
+
+
   ask turtles[
     ;; condition about the possibility to be seen
     if seenProb < boldness [
@@ -65,22 +67,60 @@ to go
             set newFitness newFitness - 2
             ;;His/her punishment
             ask turtle criminalTurtle [
+              ;; punishment
               set newFitness newFitness - 9
-              ;; you need to change also the parametesrs of boldness in accordin to parameter mu
+              ;; track the history of this agent
+              if history = 5 [ set history 0 ]
+              set history history + 1
+
+              ;; you need to change also the parametesrs of boldness in according to parameter mu
+              ifelse mu[
+                ;;learn from the punishment
+                ;; @todo: increase vengefulness of a factor C (example 20%)
+                set vengefulness vengefulness + ( vengefulness * 20 / 100 )
+                ;; punish more times
+                ;; @todo: increase boldness of a factor C' (example 40%)
+                if history = 5 [
+                  set boldness boldness + ( boldness * 40 / 100 )
+                ]
+              ][
+                ;;learn from the punishment
+                ;; @todo: decrease boldness of a factor D (example 20%)
+                set boldness boldness - ( boldness * 20 / 100 )
+                ;; punish more times
+                ;; @todo: increase vengefulness of a factor D' (example 40%)
+                if history = 5 [
+                  set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+                ]
+              ]
             ]
           ]
         ]
       ]
     ]
+    plotxy 1 1
   ]
+
+
+  ;; print test
+  ask turtle 0 [
+    print (word "T - probability to be seen" seenProb)
+    print (word "T - criminal tendency" boldness)
+    print (word "T - punishment tendency" vengefulness)
+    print (word "T - bad reaction to punishment?" mu)
+    print (word "T - old payoff" oldFitness)
+    print (word "T - new payoff" newFitness)
+ ]
 
 
   ask turtles[
     ifelse newFitness > oldFitness [
       ;; you need to change also the parametesrs of boldness in according to parameter mu
-      print "I ll be more criminal"
+      ;; I ll be more criminal
+
     ][
-      print "I ll be less criminal"
+      ;; I ll be less criminal
+
     ]
     set oldFitness newFitness
   ]
@@ -177,6 +217,24 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+233
+85
+433
+235
+plot 1
+Time
+Avg Number of Fitness
+0.0
+100.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
