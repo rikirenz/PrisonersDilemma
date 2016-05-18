@@ -34,27 +34,23 @@ to setupErdosRenyi
       set seenProb 1 - (1 / ((count my-links) + 1))
   ]
 
+  ;; define the color of the turtles
+  colorTurtles
 end
 
 to go
-  ;; set the global variables
-  set time 0
-
-
   ask turtles[
     ;; condition about the possibility to be seen
     if seenProb < boldness [
-      ;; I'll commit the crime
-
+      ;; ************************
+      ;; *** COMMIT THE CRIME ***
+      ;; ************************
       ;; pick a random neighbor
       ;; decrease his/her payoff
-      ask link-neighbors[
-        set newFitness newFitness - 1
-      ]
-
+      ask link-neighbors[set newFitness newFitness - 1]
       ;; increase my payoff
       set newFitness newFitness + 3
-
+      ;; trace who is the criminal turtle
       let criminalTurtle who
 
       ;; conditional if about the probability to be seen
@@ -98,11 +94,38 @@ to go
         ]
       ]
     ]
-    plotxy 1 1
   ]
 
+  ;; let generalAvg
+  ;; ask turtles []
 
-  ;; print test
+
+  ;; chart plot
+;;  set-current-plot-pen default
+  set-current-plot "plotCriminal"
+  set-current-plot-pen "default"
+  plot count turtles with [color = red]
+  set-current-plot-pen "pen-1"
+  plot count turtles with [color = blue]
+
+  ;; plot-blue count turtles with [color = blue]
+
+
+  ask turtles[
+    if newFitness < oldFitness [
+      ;; you need to change also the parametesrs of boldness in according to parameter mu
+      ;; I ll be more criminal and I ll change the behaviour
+      set boldness boldness + ( boldness * 20 / 100 )
+      set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+
+    ]
+    set oldFitness newFitness
+  ]
+
+  ;; redefine color after the changes in the parameters
+  colorTurtles
+
+  ;;print test node 0
   ask turtle 0 [
     print (word "T - probability to be seen" seenProb)
     print (word "T - criminal tendency" boldness)
@@ -110,21 +133,18 @@ to go
     print (word "T - bad reaction to punishment?" mu)
     print (word "T - old payoff" oldFitness)
     print (word "T - new payoff" newFitness)
- ]
-
-
-  ask turtles[
-    ifelse newFitness > oldFitness [
-      ;; you need to change also the parametesrs of boldness in according to parameter mu
-      ;; I ll be more criminal
-
-    ][
-      ;; I ll be less criminal
-
-    ]
-    set oldFitness newFitness
   ]
 
+end
+
+to colorTurtles
+  ask turtles[
+    ifelse seenProb < boldness [
+      set color red
+    ][
+    set color blue
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -163,7 +183,7 @@ numAgents
 numAgents
 0
 100
-100
+55
 1
 1
 NIL
@@ -178,7 +198,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.01
+0.25
 0.01
 1
 NIL
@@ -220,21 +240,22 @@ NIL
 
 PLOT
 233
-85
-433
-235
-plot 1
+10
+745
+281
+plotCriminal
 Time
-Avg Number of Fitness
+Number of criminals
 0.0
-100.0
+1.0
 0.0
 1.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
+"default" 1.0 0 -2674135 true "plot count turtles with [color = red]" "plot count turtles with [color = red]"
+"pen-1" 1.0 0 -14730904 true "plot count turtles with [color = blue]" "plot count turtles with [color = blue]"
 
 @#$#@#$#@
 ## WHAT IS IT?
