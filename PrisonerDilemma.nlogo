@@ -55,6 +55,7 @@ to go
 
       ;; conditional if about the probability to be seen
       if random-float 1.0 < seenProb [
+        ;; all the neighbors have the chance to punish the criminal
         ask link-neighbors[
           ;; conditional if about the probability to be punished
           if random-float 1.0 < vengefulness [
@@ -183,7 +184,7 @@ numAgents
 numAgents
 0
 100
-55
+100
 1
 1
 NIL
@@ -198,7 +199,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.25
+0.06
 0.01
 1
 NIL
