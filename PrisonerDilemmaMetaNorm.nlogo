@@ -57,8 +57,10 @@ to go
       if random-float 1.0 < seenProb [
         ;; all the neighbors have the chance to punish the criminal
         ask link-neighbors[
+          print (word "J - judge turtle" who)
+
           ;; conditional if about the probability to be punished
-          if random-float 1.0 < vengefulness [
+          ifelse random-float 1.0 < vengefulness [
             ;;I am going to punish the criminal turtle
             ;;My cost to punish him/her
             set newFitness newFitness - 2
@@ -73,21 +75,67 @@ to go
               ;; you need to change also the parametesrs of boldness in according to parameter mu
               ifelse mu[
                 ;;learn from the punishment
-                ;; @todo: increase vengefulness of a factor C (example 20%)
                 set vengefulness vengefulness + ( vengefulness * 20 / 100 )
                 ;; punish more times
-                ;; @todo: increase boldness of a factor C' (example 40%)
                 if history = 5 [
                   set boldness boldness + ( boldness * 40 / 100 )
                 ]
               ][
                 ;;learn from the punishment
-                ;; @todo: decrease boldness of a factor D (example 20%)
                 set boldness boldness - ( boldness * 20 / 100 )
                 ;; punish more times
-                ;; @todo: increase vengefulness of a factor D' (example 40%)
                 if history = 5 [
                   set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+                ]
+              ]
+            ]
+          ][
+            print (word "J - judge turtle did not punish the criminal" who)
+            if random-float 1.0 < seenProb [
+              ;; trace who is the criminal turtle
+              let criminalTurtle2 who
+              ask link-neighbors[ ;; redefine this they have to be in common !!!!!!!!!!!!!!!!!!!!!!
+                ;;I am going to punish the criminal turtle
+                ;;My cost to punish him/her
+                set newFitness newFitness - 2
+                ;;His/her punishment
+                ask turtle criminalTurtle2 [
+                  print (word "J - judge turtle is being punished" who)
+                  ask turtle who [
+                    print (word "J - probability to be seen" seenProb)
+                    print (word "J - criminal tendency" boldness)
+                    print (word "J - punishment tendency" vengefulness)
+                    print (word "J - bad reaction to punishment?" mu)
+                    print (word "J - old payoff" oldFitness)
+                    print (word "J - new payoff" newFitness)
+                  ]
+
+                  ;; punishment
+                  set newFitness newFitness - 9
+                  ;; track the history of this agent
+                  if history = 5 [ set history 0 ]
+                  set history history + 1
+
+                  ;; you need to change also the parameters of boldness in according to parameter mu
+                  ifelse mu[
+                    ;;learn from the punishment
+                    ;; @todo: increase vengefulness of a factor C (example 20%)
+                    set vengefulness vengefulness + ( vengefulness * 20 / 100 )
+                    ;; punish more times
+                    ;; @todo: increase boldness of a factor C' (example 40%)
+                    if history = 5 [
+                      set boldness boldness + ( boldness * 40 / 100 )
+                    ]
+                  ][
+                    ;;learn from the punishment
+                    ;; @todo: decrease boldness of a factor D (example 20%)
+                    set boldness boldness - ( boldness * 20 / 100 )
+                    ;; punish more times
+                    ;; @todo: increase vengefulness of a factor D' (example 40%)
+                    if history = 5 [
+                      set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+                    ]
+                  ]
                 ]
               ]
             ]
@@ -97,20 +145,12 @@ to go
     ]
   ]
 
-  ;; let generalAvg
-  ;; ask turtles []
-
-
   ;; chart plot
-;;  set-current-plot-pen default
   set-current-plot "plotCriminal"
   set-current-plot-pen "default"
   plot count turtles with [color = red]
   set-current-plot-pen "pen-1"
   plot count turtles with [color = blue]
-
-  ;; plot-blue count turtles with [color = blue]
-
 
   ask turtles[
     if newFitness < oldFitness [
@@ -126,15 +166,15 @@ to go
   ;; redefine color after the changes in the parameters
   colorTurtles
 
-  ;;print test node 0
-  ask turtle 0 [
-    print (word "T - probability to be seen" seenProb)
-    print (word "T - criminal tendency" boldness)
-    print (word "T - punishment tendency" vengefulness)
-    print (word "T - bad reaction to punishment?" mu)
-    print (word "T - old payoff" oldFitness)
-    print (word "T - new payoff" newFitness)
-  ]
+  ;; print test node 0
+  ;; ask turtle 0 [
+    ;print (word "T - probability to be seen" seenProb)
+    ;print (word "T - criminal tendency" boldness)
+    ;print (word "T - punishment tendency" vengefulness)
+    ;print (word "T - bad reaction to punishment?" mu)
+    ;print (word "T - old payoff" oldFitness)
+    ;print (word "T - new payoff" newFitness)
+  ;;]
 
 end
 
@@ -199,7 +239,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.08
+0.05
 0.01
 1
 NIL
@@ -223,10 +263,10 @@ NIL
 1
 
 BUTTON
-6
-465
-169
-498
+4
+247
+180
+280
 run simulation
 go
 T
