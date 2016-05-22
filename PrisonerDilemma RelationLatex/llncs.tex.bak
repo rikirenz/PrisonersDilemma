@@ -1,0 +1,58 @@
+% This is LLNCS.DEM the demonstration file of
+% the LaTeX macro package from Springer-Verlag
+% for Lecture Notes in Computer Science,
+% version 2.4 for LaTeX2e as of 16. April 2010
+%
+\documentclass{llncs}
+% packages
+\usepackage{makeidx} 
+\usepackage{url}
+
+\begin{document}
+
+\title{Project Relation of Prisoner Dilemma}
+\subtitle{Course of Complex Systems}
+
+\author{Student:Riccardo Candido}
+\author{ID number: 0000749606}
+\author{e-mail: riccardo.candido@studio.unibo.it}
+
+\date{\today}
+
+\maketitle
+
+\begin{abstract}
+	Relaizione di progetto per il corso di sistemi distribuiti. Il report ha il fine di descrivere in maniera accurata lo sviluppo e il funzionamento di un sistema distribuito; giustificandone le scelte implementative e le politche messe in atto. 
+\end{abstract}
+
+\section{Section Name}
+	It is helpful to label the different sections of your report.
+    Please choose names that make sense.  You may number the sections, like in this example or not (then put an asterisk after the section command, e.g.~\verb+\section*+). 
+    
+    
+\section{Analysis}
+	Here you discuss your observations and results
+	
+    \subsection{Double Slit Interference}
+		The subsection command let's you further divide your sections up.  Comment on your observations and results here
+        
+        \subsubsection{Varying Parameters}
+        	For longer documents, you can even use subsubsections, 
+            it's probably overkill for this analysis.
+            
+            \paragraph{Still More labels}
+            	You can also label paragraphs
+                
+       
+       \subsubsection{When to Make New Sections}
+        	As a general rule of thumb, don't make smaller sections, subsections, etc, unless there are at least two of them at that level (just like with lists).
+	
+    \subsection{Single Slit}
+		More discussion here
+        
+\section{Data}
+	Please don't include any data tables in your \LaTeX\, write up.  Making tables in \LaTeX\, is very boring, although there are programs to convert your Excel file to \LaTeX\, form!  We'll worry about that later.
+
+
+
+\end{document}

@@ -57,7 +57,7 @@ to go
       if random-float 1.0 < seenProb [
         ;; all the neighbors have the chance to punish the criminal
         ask link-neighbors[
-          print (word "J - judge turtle" who)
+          ;print (word "J - judge turtle" who)
 
           ;; conditional if about the probability to be punished
           ifelse random-float 1.0 < vengefulness [
@@ -90,24 +90,40 @@ to go
               ]
             ]
           ][
-            print (word "J - judge turtle did not punish the criminal" who)
+            ;print (word "J - judge turtle did not punish the criminal" who)
             if random-float 1.0 < seenProb [
               ;; trace who is the criminal turtle
               let criminalTurtle2 who
-              ask link-neighbors[ ;; redefine this they have to be in common !!!!!!!!!!!!!!!!!!!!!!
+
+
+              ;; define the set of agents that the two criminals have in common
+              let A []
+              let B []
+              ask turtle criminalTurtle2[set A link-neighbors]
+              ask turtle criminalTurtle [set B link-neighbors]
+              ;print (word "A - agentset " A " - turtle " criminalTurtle2)
+              ;print (word "B - agentset " B  " - turtle " criminalTurtle)
+
+              let C A with [member? self B]
+              ask C[
+
+                print (word "J - 2nd judge turtle is going to punish" who)
+
+
+
+
                 ;;I am going to punish the criminal turtle
                 ;;My cost to punish him/her
                 set newFitness newFitness - 2
                 ;;His/her punishment
                 ask turtle criminalTurtle2 [
-                  print (word "J - judge turtle is being punished" who)
                   ask turtle who [
-                    print (word "J - probability to be seen" seenProb)
-                    print (word "J - criminal tendency" boldness)
-                    print (word "J - punishment tendency" vengefulness)
-                    print (word "J - bad reaction to punishment?" mu)
-                    print (word "J - old payoff" oldFitness)
-                    print (word "J - new payoff" newFitness)
+;                    print (word "J - probability to be seen" seenProb)
+;                    print (word "J - criminal tendency" boldness)
+;                    print (word "J - punishment tendency" vengefulness)
+;                    print (word "J - bad reaction to punishment?" mu)
+;                    print (word "J - old payoff" oldFitness)
+;                    print (word "J - new payoff" newFitness)
                   ]
 
                   ;; punishment
@@ -239,7 +255,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.05
+0.12
 0.01
 1
 NIL
