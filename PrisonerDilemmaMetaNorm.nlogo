@@ -1,18 +1,12 @@
-breed [agents agent]
 turtles-own [seenProb boldness vengefulness oldFitness newFitness mu history]
-globals [time]
-
 
 to setupErdosRenyi
-  ;; set the turtles
+  ; set the turtles
   clear-all
   create-turtles numAgents
   layout-circle turtles (max-pxcor - 1)
 
-  ;; set the global variables
-  set time 0
-
-  ;; define the turtles attributes
+  ; define the turtles attributes
   ask turtles[
     set boldness 0 + random-float 1
     set vengefulness 0 + random-float 1
@@ -21,136 +15,147 @@ to setupErdosRenyi
     set newFitness 0
   ]
 
-  ;;#############################################
-  ;;############ DEFINE THE SEENPROB ############
-  ;;#############################################
-  ;; create links among turtles in according to the erods renyi model
+  ; create links erods renyi model
   ask turtles [
-    create-links-with turtles with [self != myself and                        ;; create link with someone different from itself
-                                    random-float 1.0 < probErdosRenyi]        ;; with a probability
-  ]
-  ;; define the probability to be seen
-  ask turtles [
-      set seenProb 1 - (1 / ((count my-links) + 1))
+    create-links-with turtles with [self != myself and                        ; create link with someone different from itself
+                                    random-float 1.0 < probErdosRenyi]        ; with a probability
   ]
 
-  ;; define the color of the turtles
+  ; define the probability to be seen
+  ask turtles [ set seenProb 1 - (1 / ((count my-links) + 1))]
+
+  ; define the color of the turtles
   colorTurtles
 end
 
+
+
+globals [
+    new-node  ;; the last node we created
+    degrees   ;; this is an array that contains each node in
+            ;; proportion to its degree
+]
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Setup Procedures ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+to setupScaleFree
+  ca
+  set degrees []   ;; initialize the array to be empty
+  ;; make the initial network of two nodes and an edge
+  make-node ;; first node
+  let first-node new-node
+  let prev-node new-node
+  repeat numAgents [
+    make-node
+    make-edge new-node prev-node
+    set degrees lput prev-node degrees
+    set degrees lput new-node degrees
+    set prev-node new-node
+  ]
+  make-edge new-node first-node
+end
+
+;; used for creating a new node
+to make-node
+  crt 1
+  [
+    set color red
+    set new-node self ;; set the new-node global
+  ]
+end
+
+;; connects the two nodes
+to make-edge [node1 node2]
+  ask node1 [
+    ifelse (node1 = node2)
+    [
+      show "error: self-loop attempted"
+    ]
+    [
+      create-link-with node2 [ set color green ]
+     ;; position the new node near its partner
+       move-to new-node
+       fd 8
+      set degrees lput node1 degrees
+      set degrees lput node2 degrees
+     ]
+  ]
+end
+
+
 to go
   ask turtles[
-    ;; condition about the possibility to be seen
+    ; condition about the possibility to be seen
     if seenProb < boldness [
-      ;; ************************
-      ;; *** COMMIT THE CRIME ***
-      ;; ************************
-      ;; pick a random neighbor
-      ;; decrease his/her payoff
+      ; COMMIT THE CRIME
+      ; pick a random neighbor and decrease his/her payoff
       ask link-neighbors[set newFitness newFitness - 1]
-      ;; increase my payoff
+      ; increase my payoff
       set newFitness newFitness + 3
-      ;; trace who is the criminal turtle
+      ; trace who is the criminal turtle
       let criminalTurtle who
-
-      ;; conditional if about the probability to be seen
+      ; conditional if about the probability to be seen
       if random-float 1.0 < seenProb [
-        ;; all the neighbors have the chance to punish the criminal
+        ; all the neighbors have the chance to punish the criminal
         ask link-neighbors[
-          ;print (word "J - judge turtle" who)
-
-          ;; conditional if about the probability to be punished
+          ; conditional if about the probability to be punished
           ifelse random-float 1.0 < vengefulness [
-            ;;I am going to punish the criminal turtle
-            ;;My cost to punish him/her
+            ; My cost to punish him/her
             set newFitness newFitness - 2
-            ;;His/her punishment
+            ; His/her punishment
             ask turtle criminalTurtle [
-              ;; punishment
+
+              ; punishment
               set newFitness newFitness - 9
-              ;; track the history of this agent
+
+              ; track the history of this agent
               if history = 5 [ set history 0 ]
               set history history + 1
 
-              ;; you need to change also the parametesrs of boldness in according to parameter mu
-              ifelse mu[
-                ;;learn from the punishment
+              ; change the parameters of boldness in according to mu
+              ifelse mu[ ; criminal turtle
                 set vengefulness vengefulness + ( vengefulness * 20 / 100 )
-                ;; punish more times
                 if history = 5 [
                   set boldness boldness + ( boldness * 40 / 100 )
                 ]
-              ][
-                ;;learn from the punishment
+              ][; not criminal turtle
                 set boldness boldness - ( boldness * 20 / 100 )
-                ;; punish more times
-                if history = 5 [
-                  set vengefulness vengefulness + ( vengefulness * 40 / 100 )
-                ]
+                if history = 5 [ set vengefulness vengefulness + ( vengefulness * 40 / 100 )]
               ]
             ]
           ][
-            ;print (word "J - judge turtle did not punish the criminal" who)
             if random-float 1.0 < seenProb [
-              ;; trace who is the criminal turtle
+              ; play ignorant criminal turtle
               let criminalTurtle2 who
 
-
-              ;; define the set of agents that the two criminals have in common
+              ; define the two criminals' common agentset
               let A []
               let B []
               ask turtle criminalTurtle2[set A link-neighbors]
               ask turtle criminalTurtle [set B link-neighbors]
-              ;print (word "A - agentset " A " - turtle " criminalTurtle2)
-              ;print (word "B - agentset " B  " - turtle " criminalTurtle)
 
               let C A with [member? self B]
               ask C[
 
-                print (word "J - 2nd judge turtle is going to punish" who)
-
-
-
-
-                ;;I am going to punish the criminal turtle
-                ;;My cost to punish him/her
+                ;My cost to punish him/her
                 set newFitness newFitness - 2
-                ;;His/her punishment
+                ;His/her punishment
                 ask turtle criminalTurtle2 [
-                  ask turtle who [
-;                    print (word "J - probability to be seen" seenProb)
-;                    print (word "J - criminal tendency" boldness)
-;                    print (word "J - punishment tendency" vengefulness)
-;                    print (word "J - bad reaction to punishment?" mu)
-;                    print (word "J - old payoff" oldFitness)
-;                    print (word "J - new payoff" newFitness)
-                  ]
-
-                  ;; punishment
+                  ; punishment
                   set newFitness newFitness - 9
-                  ;; track the history of this agent
+                  ; track the history of this agent
                   if history = 5 [ set history 0 ]
                   set history history + 1
 
-                  ;; you need to change also the parameters of boldness in according to parameter mu
-                  ifelse mu[
-                    ;;learn from the punishment
-                    ;; @todo: increase vengefulness of a factor C (example 20%)
+                  ; change the parameters of boldness in according to mu
+                  ifelse mu[ ; criminal turtle
                     set vengefulness vengefulness + ( vengefulness * 20 / 100 )
-                    ;; punish more times
-                    ;; @todo: increase boldness of a factor C' (example 40%)
-                    if history = 5 [
-                      set boldness boldness + ( boldness * 40 / 100 )
-                    ]
-                  ][
-                    ;;learn from the punishment
-                    ;; @todo: decrease boldness of a factor D (example 20%)
+                    if history = 5 [set boldness boldness + ( boldness * 40 / 100 )]
+                  ][ ; not criminal turtle
                     set boldness boldness - ( boldness * 20 / 100 )
-                    ;; punish more times
-                    ;; @todo: increase vengefulness of a factor D' (example 40%)
-                    if history = 5 [
-                      set vengefulness vengefulness + ( vengefulness * 40 / 100 )
-                    ]
+                    if history = 5 [set vengefulness vengefulness + ( vengefulness * 40 / 100 )]
                   ]
                 ]
               ]
@@ -161,17 +166,8 @@ to go
     ]
   ]
 
-  ;; chart plot
-  set-current-plot "plotCriminal"
-  set-current-plot-pen "default"
-  plot count turtles with [color = red]
-  set-current-plot-pen "pen-1"
-  plot count turtles with [color = blue]
-
   ask turtles[
     if newFitness < oldFitness [
-      ;; you need to change also the parametesrs of boldness in according to parameter mu
-      ;; I ll be more criminal and I ll change the behaviour
       set boldness boldness + ( boldness * 20 / 100 )
       set vengefulness vengefulness + ( vengefulness * 40 / 100 )
 
@@ -179,21 +175,12 @@ to go
     set oldFitness newFitness
   ]
 
-  ;; redefine color after the changes in the parameters
   colorTurtles
-
-  ;; print test node 0
-  ;; ask turtle 0 [
-    ;print (word "T - probability to be seen" seenProb)
-    ;print (word "T - criminal tendency" boldness)
-    ;print (word "T - punishment tendency" vengefulness)
-    ;print (word "T - bad reaction to punishment?" mu)
-    ;print (word "T - old payoff" oldFitness)
-    ;print (word "T - new payoff" newFitness)
-  ;;]
+  chartPlot
 
 end
 
+; redefine colors in according to the fitness parameter
 to colorTurtles
   ask turtles[
     ifelse seenProb < boldness [
@@ -202,6 +189,16 @@ to colorTurtles
     set color blue
     ]
   ]
+end
+
+
+; chart plot
+to chartPlot
+  set-current-plot "plotCriminal"
+  set-current-plot-pen "default"
+  plot count turtles with [color = red]
+  set-current-plot-pen "pen-1"
+  plot count turtles with [color = blue]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -255,7 +252,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.12
+0.34
 0.01
 1
 NIL
@@ -313,6 +310,23 @@ false
 PENS
 "default" 1.0 0 -2674135 true "plot count turtles with [color = red]" "plot count turtles with [color = red]"
 "pen-1" 1.0 0 -14730904 true "plot count turtles with [color = blue]" "plot count turtles with [color = blue]"
+
+BUTTON
+11
+116
+178
+149
+NIL
+setupScaleFree
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
