@@ -61,8 +61,8 @@ end
 to setTurtlesAttributes
   ; define the turtles attributes
   ask turtles[
-    set boldness 0 + random-float 1
-    set vengefulness 0 + random-float 1
+    set boldness random-float 1
+    set vengefulness random-float 1
     set mu one-of [ true false ]
     set oldFitness 0
     set newFitness 0
@@ -71,11 +71,17 @@ to setTurtlesAttributes
   ; define the probability to be seen
   ask turtles [ set seenProb 1 - (1 / ((count my-links) + 1))]
 
+  ask turtles [
+    print count my-links
+  ]
+
   ; define the color of the turtles
   colorTurtles
 end
 
 to go
+  repeat 1 [
+  setupErdosRenyi
   while [ time < timeLimit ] [
     set time time + 1
 
@@ -174,11 +180,15 @@ to go
     colorTurtles
     chartPlot
   ]
+  ; @todo delete the print line
+  print count turtles with [color = red] / count turtles
+  ]
 end
 
 ; redefine colors in according to the fitness parameter
 to colorTurtles
   ask turtles[
+    let bool seenProb < boldness
     ifelse seenProb < boldness [
       set color red
     ][
@@ -217,8 +227,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -247,8 +257,8 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.09
-0.01
+1
+0.1
 1
 NIL
 HORIZONTAL
@@ -277,7 +287,7 @@ BUTTON
 332
 run simulation
 go
-T
+NIL
 1
 T
 OBSERVER
