@@ -1,18 +1,62 @@
-breed [agents agent]
 turtles-own [seenProb boldness vengefulness oldFitness newFitness mu history]
 globals [time]
 
+to setupBarabasi
+  clear-all
+  ;; create two turtles (nodes) and space them out
+  create-turtles 2 [
+    set color red
+    fd 5
+  ]
+  ask turtle 0 [ create-link-with turtle 1 ]  ; create a link between them
+  reset-ticks
+end
+
+to goBarabasi
+  setupBarabasi
+  while [ count turtles < numAgents ] [
+    let partner one-of [both-ends] of one-of links
+    create-turtles 1 [
+      set color red
+      ;; move close to my partner, but not too close -- to enable nicer looking networks
+      move-to partner
+      fd 1
+      create-link-with partner
+    ]
+    ;; lay out the nodes with a spring layout
+    layoutBarabasi
+    tick
+  ]
+  setTurtlesAttributes
+  stop
+end
+
+to layoutBarabasi
+  ask turtles [ set size 1 ]
+  layout-spring turtles links 0.2 2 0.5
+  ask turtles [
+    facexy 0 0
+    fd (distancexy 0 0) / 100
+  ]
+end
 
 to setupErdosRenyi
-  ;; set the turtles
+  ; set the turtles
   clear-all
   create-turtles numAgents
   layout-circle turtles (max-pxcor - 1)
 
-  ;; set the global variables
-  set time 0
+  ; create links erods renyi model
+  ask turtles [
+    create-links-with turtles with [self != myself and                        ; create link with someone different from itself
+                                    random-float 1.0 < probErdosRenyi]        ; with a probability
+  ]
 
-  ;; define the turtles attributes
+  setTurtlesAttributes
+end
+
+to setTurtlesAttributes
+  ; define the turtles attributes
   ask turtles[
     set boldness 0 + random-float 1
     set vengefulness 0 + random-float 1
@@ -21,73 +65,53 @@ to setupErdosRenyi
     set newFitness 0
   ]
 
-  ;;#############################################
-  ;;############ DEFINE THE SEENPROB ############
-  ;;#############################################
-  ;; create links among turtles in according to the erods renyi model
-  ask turtles [
-    create-links-with turtles with [self != myself and                        ;; create link with someone different from itself
-                                    random-float 1.0 < probErdosRenyi]        ;; with a probability
-  ]
-  ;; define the probability to be seen
-  ask turtles [
-      set seenProb 1 - (1 / ((count my-links) + 1))
-  ]
+  ; define the probability to be seen
+  ask turtles [ set seenProb 1 - (1 / ((count my-links) + 1))]
 
-  ;; define the color of the turtles
+  ; define the color of the turtles
   colorTurtles
 end
 
 to go
-  ask turtles[
-    ;; condition about the possibility to be seen
-    if seenProb < boldness [
-      ;; ************************
-      ;; *** COMMIT THE CRIME ***
-      ;; ************************
-      ;; pick a random neighbor
-      ;; decrease his/her payoff
-      ask link-neighbors[set newFitness newFitness - 1]
-      ;; increase my payoff
-      set newFitness newFitness + 3
-      ;; trace who is the criminal turtle
-      let criminalTurtle who
+  while [ time < timeLimit ] [
+    set time time + 1
+    ask turtles[
+      ; condition about the possibility to be seen
+      if seenProb < boldness [
+        ; COMMIT THE CRIME
+        ; pick a random neighbor and decrease his/her payoff
+        ask link-neighbors[set newFitness newFitness - 1]
+        ; increase my payoff
+        set newFitness newFitness + 3
+        ; trace who is the criminal turtle
+        let criminalTurtle who
+        ; conditional if about the probability to be seen
+        if random-float 1.0 < seenProb [
+          ; all the neighbors have the chance to punish the criminal
+          ask link-neighbors[
+            ; conditional if about the probability to be punished
+            if random-float 1.0 < vengefulness [ ; NORM GAME
+                                                 ; My cost to punish him/her
+              set newFitness newFitness - 2
+              ; His/her punishment
+              ask turtle criminalTurtle [
 
-      ;; conditional if about the probability to be seen
-      if random-float 1.0 < seenProb [
-        ;; all the neighbors have the chance to punish the criminal
-        ask link-neighbors[
-          ;; conditional if about the probability to be punished
-          if random-float 1.0 < vengefulness [
-            ;;I am going to punish the criminal turtle
-            ;;My cost to punish him/her
-            set newFitness newFitness - 2
-            ;;His/her punishment
-            ask turtle criminalTurtle [
-              ;; punishment
-              set newFitness newFitness - 9
-              ;; track the history of this agent
-              if history = 5 [ set history 0 ]
-              set history history + 1
+                ; punishment
+                set newFitness newFitness - 9
 
-              ;; you need to change also the parametesrs of boldness in according to parameter mu
-              ifelse mu[
-                ;;learn from the punishment
-                ;; @todo: increase vengefulness of a factor C (example 20%)
-                set vengefulness vengefulness + ( vengefulness * 20 / 100 )
-                ;; punish more times
-                ;; @todo: increase boldness of a factor C' (example 40%)
-                if history = 5 [
-                  set boldness boldness + ( boldness * 40 / 100 )
-                ]
-              ][
-                ;;learn from the punishment
-                ;; @todo: decrease boldness of a factor D (example 20%)
+                ; track the history of this agent
+                if history = 5 [ set history 0 ]
+                set history history + 1
+
+                ; change the parameters of boldness in according to mu
+                ifelse mu[ ; criminal turtle
+                  set vengefulness vengefulness + ( vengefulness * 20 / 100 )
+                  if history = 5 [
+                    set boldness boldness + ( boldness * 40 / 100 )
+                  ]
+                ][; not criminal turtle
                 set boldness boldness - ( boldness * 20 / 100 )
-                ;; punish more times
-                ;; @todo: increase vengefulness of a factor D' (example 40%)
-                if history = 5 [
-                  set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+                if history = 5 [ set vengefulness vengefulness + ( vengefulness * 40 / 100 )]
                 ]
               ]
             ]
@@ -95,49 +119,22 @@ to go
         ]
       ]
     ]
-  ]
 
-  ;; let generalAvg
-  ;; ask turtles []
+    ask turtles[
+      if newFitness < oldFitness [
+        set boldness boldness + ( boldness * 20 / 100 )
+        set vengefulness vengefulness + ( vengefulness * 40 / 100 )
 
-
-  ;; chart plot
-;;  set-current-plot-pen default
-  set-current-plot "plotCriminal"
-  set-current-plot-pen "default"
-  plot count turtles with [color = red]
-  set-current-plot-pen "pen-1"
-  plot count turtles with [color = blue]
-
-  ;; plot-blue count turtles with [color = blue]
-
-
-  ask turtles[
-    if newFitness < oldFitness [
-      ;; you need to change also the parametesrs of boldness in according to parameter mu
-      ;; I ll be more criminal and I ll change the behaviour
-      set boldness boldness + ( boldness * 20 / 100 )
-      set vengefulness vengefulness + ( vengefulness * 40 / 100 )
-
+      ]
+      set oldFitness newFitness
     ]
-    set oldFitness newFitness
+
+    colorTurtles
+    chartPlot
   ]
-
-  ;; redefine color after the changes in the parameters
-  colorTurtles
-
-  ;;print test node 0
-  ask turtle 0 [
-    print (word "T - probability to be seen" seenProb)
-    print (word "T - criminal tendency" boldness)
-    print (word "T - punishment tendency" vengefulness)
-    print (word "T - bad reaction to punishment?" mu)
-    print (word "T - old payoff" oldFitness)
-    print (word "T - new payoff" newFitness)
-  ]
-
 end
 
+; redefine colors in according to the fitness parameter
 to colorTurtles
   ask turtles[
     ifelse seenProb < boldness [
@@ -147,12 +144,24 @@ to colorTurtles
     ]
   ]
 end
+
+
+
+; chart plot
+to chartPlot
+  set-current-plot "plotCriminal"
+  set-current-plot-pen "default"
+  plot count turtles with [color = red]
+  set-current-plot-pen "pen-1"
+  plot count turtles with [color = blue]
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-771
-10
-1271
-531
+753
+16
+1253
+537
 16
 16
 14.85
@@ -199,7 +208,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.08
+0.25
 0.01
 1
 NIL
@@ -223,10 +232,10 @@ NIL
 1
 
 BUTTON
-6
-465
-169
-498
+520
+289
+696
+322
 run simulation
 go
 T
@@ -240,11 +249,11 @@ NIL
 1
 
 PLOT
-233
+185
 10
-745
+697
 281
-plotCriminal
+plotCriminal - Norm Game
 Time
 Number of criminals
 0.0
@@ -257,6 +266,60 @@ false
 PENS
 "default" 1.0 0 -2674135 true "plot count turtles with [color = red]" "plot count turtles with [color = red]"
 "pen-1" 1.0 0 -14730904 true "plot count turtles with [color = blue]" "plot count turtles with [color = blue]"
+
+BUTTON
+8
+117
+179
+150
+Setup Barabasi model
+goBarabasi
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+9
+153
+95
+198
+Min degree
+min [ count link-neighbors] of turtles
+17
+1
+11
+
+MONITOR
+94
+153
+179
+198
+Max Degree
+max [count link-neighbors] of turtles
+17
+1
+11
+
+SLIDER
+345
+289
+517
+322
+timeLimit
+timeLimit
+0
+1000
+500
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
