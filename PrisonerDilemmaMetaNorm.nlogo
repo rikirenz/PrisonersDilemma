@@ -78,7 +78,7 @@ end
 
 to go
   repeat 30 [
-  setupErdosRenyi
+  goBarabasi
   while [ time < timeLimit ] [
     set time time + 1
 
@@ -123,7 +123,6 @@ to go
               ]
             ][ ; META - NORM GAME
               if metaNorm? [
-                print "Playing metanorm game"
                 if random-float 1.0 < seenProb [
                   ; play ignorant criminal turtle
                   let criminalTurtle2 who
@@ -220,7 +219,6 @@ to-report thresholdDecrement[value percentage]
     report test
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 753
@@ -243,8 +241,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -273,7 +271,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-0.1
+0
 0.1
 1
 NIL
@@ -393,7 +391,7 @@ SWITCH
 223
 metaNorm?
 metaNorm?
-1
+0
 1
 -1000
 
