@@ -69,18 +69,15 @@ to setTurtlesAttributes
   ]
 
   ; define the probability to be seen
-  ask turtles [ set seenProb 1 - (1 / ((count my-links) + 1))]
-
   ask turtles [
-    print count my-links
+    set seenProb 1 - (1 / ((count my-links) + 1))
   ]
-
   ; define the color of the turtles
   colorTurtles
 end
 
 to go
-  repeat 1 [
+  repeat 30 [
   setupErdosRenyi
   while [ time < timeLimit ] [
     set time time + 1
@@ -115,13 +112,13 @@ to go
 
                 ; change the parameters of boldness in according to mu
                 ifelse mu[ ; criminal turtle
-                  set vengefulness vengefulness + ( vengefulness * 20 / 100 )
+                  set vengefulness thresholdIncrement vengefulness 20
                   if history = 5 [
-                    set boldness boldness + ( boldness * 40 / 100 )
+                    set boldness thresholdIncrement boldness 40
                   ]
                 ][; not criminal turtle
-                set boldness boldness - ( boldness * 20 / 100 )
-                if history = 5 [ set vengefulness vengefulness + ( vengefulness * 40 / 100 )]
+                set boldness thresholdDecrement boldness 20
+                if history = 5 [ set vengefulness thresholdIncrement vengefulness 40]
                 ]
               ]
             ][ ; META - NORM GAME
@@ -139,7 +136,6 @@ to go
 
                   let C A with [member? self B]
                   ask C[
-
                     ;My cost to punish him/her
                     set newFitness newFitness - 2
                     ;His/her punishment
@@ -152,11 +148,11 @@ to go
 
                       ; change the parameters of boldness in according to mu
                       ifelse mu[ ; criminal turtle
-                        set vengefulness vengefulness + ( vengefulness * 20 / 100 )
-                        if history = 5 [set boldness boldness + ( boldness * 40 / 100 )]
+                        set vengefulness thresholdIncrement vengefulness 20
+                        if history = 5 [set boldness thresholdIncrement boldness 40]
                       ][ ; not criminal turtle
-                      set boldness boldness - ( boldness * 20 / 100 )
-                      if history = 5 [set vengefulness vengefulness + ( vengefulness * 40 / 100 )]
+                      set boldness thresholdIncrement boldness 20
+                      if history = 5 [set vengefulness thresholdIncrement vengefulness 40 ]
                       ]
                     ]
                   ]
@@ -170,8 +166,8 @@ to go
 
     ask turtles[
       if newFitness < oldFitness [
-        set boldness boldness + ( boldness * 20 / 100 )
-        set vengefulness vengefulness + ( vengefulness * 40 / 100 )
+        set boldness  thresholdIncrement boldness 20
+        set vengefulness thresholdIncrement vengefulness 40
 
       ]
       set oldFitness newFitness
@@ -205,6 +201,26 @@ to chartPlot
   set-current-plot-pen "pen-1"
   plot count turtles with [color = blue]
 end
+
+to-report thresholdIncrement[value percentage]
+  let threshold 1 - 1 / count turtles
+  let test value + ( value * percentage / 100 )
+  ifelse test >= threshold  [
+    report threshold
+  ][
+    report test
+  ]
+end
+
+to-report thresholdDecrement[value percentage]
+  let test value - ( value * percentage / 100 )
+  ifelse test <= 0 [
+    report 0
+  ][
+    report test
+  ]
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 753
@@ -227,8 +243,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-1
-1
+0
+0
 1
 ticks
 30.0
@@ -257,7 +273,7 @@ probErdosRenyi
 probErdosRenyi
 0
 1
-1
+0.1
 0.1
 1
 NIL
