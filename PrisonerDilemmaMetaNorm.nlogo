@@ -221,10 +221,10 @@ to-report thresholdDecrement[value percentage]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-753
-10
-1253
-531
+206
+337
+706
+858
 16
 16
 14.85
