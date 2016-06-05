@@ -1,2 +1,2 @@
 # PrisonersDilemma
-A prisoner's dilemma simulation build in netlogo
+A prisoner's dilemma simulation build in netlogo.
