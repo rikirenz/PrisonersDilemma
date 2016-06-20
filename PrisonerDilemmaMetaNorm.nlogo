@@ -1,6 +1,9 @@
 turtles-own [seenProb boldness vengefulness oldFitness newFitness mu history]
 globals [time]
 
+;; ##############################################################################################################
+;; ##################################################### BARABASI ###############################################
+;; ##############################################################################################################
 to setupBarabasi
   clear-all
   set-default-shape turtles "circle"
@@ -20,7 +23,6 @@ to goBarabasi
     ;; create new node, link to partner
     create-turtles 1 [
       set color red
-      ;; move close to my partner, but not too close -- to enable nicer looking networks
       move-to partner
       fd 1
       create-link-with partner
@@ -42,6 +44,63 @@ to layoutBarabasi
     fd (distancexy 0 0) / 100
   ]
 end
+
+
+;; ##############################################################################################################
+;; ############################################### Watts and Strogatz  ##########################################
+;; ##############################################################################################################
+
+;; create the links among nodes (algorithm), add weight and color
+
+to setupWattsStrogatz
+  ; set the turtles
+  clear-all
+  ;; creates all the nodes
+  set-default-shape turtles "circle"
+  create-turtles numAgents [set size 0.5 set color gray]
+  ;; arrange them in a circle in order by who number
+  layout-circle (sort turtles) (max-pxcor - 1)
+
+  ;; create a regular lattice
+  ask turtles [
+    let n 1
+    while [ n <= K ]
+    [
+      ifelse who < (count turtles - K)
+      [
+        ifelse (random-float 1) < beta
+        [random-link]
+        [normal-link n]
+      ][
+        normal-link n
+      ]
+      set n (n + 1)
+    ]
+  ]
+   setTurtlesAttributes
+end
+
+to normal-link [n]
+  create-link-with turtle ((who + n) mod count turtles)
+  [
+    set color blue
+  ]
+end
+
+;; create a link with another 'not-yet linked' node whose id > caller id
+to random-link
+  let myid who
+  let other-node one-of other turtles with [(who > myid) and (not link-neighbor? turtle myid)]
+  if other-node != nobody
+  [
+    create-link-with other-node[ set color red]
+  ]
+end
+
+;; ##############################################################################################################
+;; ################################################### ERDOS RENYI ##############################################
+;; ##############################################################################################################
+
 
 to setupErdosRenyi
   ; set the turtles
@@ -76,12 +135,19 @@ to setTurtlesAttributes
   colorTurtles
 end
 
+;; ##############################################################################################################
+;; ############################################### SIMULATION SECTION  ##########################################
+;; ##############################################################################################################
+
 to go
+  set K 0
+  repeat 9 [
+  set K K + 10
+  print (word "new Value of K " K)
   repeat 30 [
-  goBarabasi
+  setupWattsStrogatz
   while [ time < timeLimit ] [
     set time time + 1
-
     ask turtles[
       ; condition about the possibility to be seen
       if seenProb < boldness [
@@ -177,7 +243,7 @@ to go
   ]
   ; @todo delete the print line
   print count turtles with [color = red] / count turtles
-  ]
+  ]]
 end
 
 ; redefine colors in according to the fitness parameter
@@ -221,10 +287,10 @@ to-report thresholdDecrement[value percentage]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-206
-337
-706
-858
+713
+10
+1213
+531
 16
 16
 14.85
@@ -263,10 +329,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-3
-81
-176
-114
+4
+290
+177
+323
 probErdosRenyi
 probErdosRenyi
 0
@@ -278,10 +344,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-5
-118
-176
-151
+4
+254
+175
+287
 Setup Erdos Renyi
 setupErdosRenyi
 NIL
@@ -331,10 +397,10 @@ PENS
 "pen-1" 1.0 0 -14730904 true "plot count turtles with [color = blue]" "plot count turtles with [color = blue]"
 
 BUTTON
-5
-153
-176
-186
+4
+115
+175
+148
 Setup Barabasi model
 goBarabasi
 NIL
@@ -385,15 +451,62 @@ count turtles with [color = blue] / count turtles
 11
 
 SWITCH
-6
-190
-176
-223
+4
+80
+174
+113
 metaNorm?
 metaNorm?
-0
+1
 1
 -1000
+
+BUTTON
+4
+149
+175
+182
+Watts-Strogatz
+setupWattsStrogatz
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+4
+184
+176
+217
+beta
+beta
+0
+1
+0.75
+0.25
+1
+NIL
+HORIZONTAL
+
+SLIDER
+4
+219
+176
+252
+K
+K
+0
+100
+60
+10
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -738,7 +851,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
