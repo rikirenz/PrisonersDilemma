@@ -140,12 +140,8 @@ end
 ;; ##############################################################################################################
 
 to go
-  set K 0
-  repeat 9 [
-  set K K + 10
-  print (word "new Value of K " K)
   repeat 30 [
-  setupWattsStrogatz
+    goBarabasi
   while [ time < timeLimit ] [
     set time time + 1
     ask turtles[
@@ -243,7 +239,7 @@ to go
   ]
   ; @todo delete the print line
   print count turtles with [color = red] / count turtles
-  ]]
+  ]
 end
 
 ; redefine colors in according to the fitness parameter
@@ -422,7 +418,7 @@ timeLimit
 timeLimit
 0
 1000
-500
+796
 1
 1
 NIL
@@ -502,7 +498,7 @@ K
 K
 0
 100
-60
+1
 10
 1
 NIL
